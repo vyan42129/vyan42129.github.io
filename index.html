@@ -6,214 +6,324 @@
 <title>Dodge Rush</title>
 
 <style>
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    overflow: hidden;
+    background: #050611;
+    color: white;
+    font-family: Arial, sans-serif;
+    user-select: none;
+}
+
+#game {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 50% 20%, #202b5c, #080914 55%, #02030a);
+}
+
+/* BACKGROUND */
+
+.star {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: white;
+    border-radius: 50%;
+    opacity: .7;
+    animation: fall linear infinite;
+}
+
+@keyframes fall {
+    from { transform: translateY(-20px); }
+    to { transform: translateY(110vh); }
+}
+
+/* UI */
+
+#ui {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    z-index: 10;
+    flex-wrap: wrap;
+}
+
+.stat {
+    padding: 9px 14px;
+    background: rgba(0,0,0,.4);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+    font-weight: bold;
+}
+
+/* PLAYER */
+
+#player {
+    width: 48px;
+    height: 48px;
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 12px;
+    background: linear-gradient(135deg,#00f5ff,#0066ff);
+    box-shadow:
+        0 0 15px #00eaff,
+        0 0 45px rgba(0,220,255,.7);
+    z-index: 5;
+}
+
+#player::after {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: white;
+    border-radius: 50%;
+    left: 17px;
+    top: 9px;
+    box-shadow: 0 0 12px white;
+}
+
+/* SHIELD */
+
+.shield {
+    outline: 5px solid rgba(0,255,255,.6);
+    box-shadow:
+        0 0 20px cyan,
+        0 0 60px cyan !important;
+}
+
+/* ENEMIES */
+
+.enemy {
+    position: absolute;
+    z-index: 4;
+    border-radius: 9px;
+    background: linear-gradient(135deg,#ff174f,#9c00ff);
+    box-shadow: 0 0 20px rgba(255,0,100,.8);
+}
+
+.fast {
+    background: linear-gradient(135deg,#ff7b00,#ff003c);
+}
+
+.big {
+    background: linear-gradient(135deg,#8b00ff,#ff008c);
+}
+
+/* COINS */
+
+.coin {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: radial-gradient(circle,#fff36b,#ffc400,#ff8500);
+    box-shadow: 0 0 20px #ffd000;
+    z-index: 4;
+    animation: spin .7s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(360deg); }
+}
+
+/* POWER UPS */
+
+.power {
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    z-index: 4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    animation: powerFloat .8s ease-in-out infinite alternate;
+}
+
+@keyframes powerFloat {
+    from { transform: translateY(0); }
+    to { transform: translateY(-7px); }
+}
+
+.shieldPower {
+    background: #00eaff;
+    box-shadow: 0 0 25px cyan;
+}
+
+.magnetPower {
+    background: #ff4fd8;
+    box-shadow: 0 0 25px #ff4fd8;
+}
+
+.slowPower {
+    background: #9d6cff;
+    box-shadow: 0 0 25px #9d6cff;
+}
+
+/* COMBO */
+
+#combo {
+    position: absolute;
+    top: 105px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 28px;
+    font-weight: bold;
+    color: #ffe600;
+    text-shadow: 0 0 15px #ff9d00;
+    opacity: 0;
+    transition: .2s;
+    z-index: 10;
+}
+
+/* POPUPS */
+
+.popup {
+    position: absolute;
+    font-size: 25px;
+    font-weight: bold;
+    pointer-events: none;
+    animation: popup .8s forwards;
+    z-index: 20;
+}
+
+@keyframes popup {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
 
-    body {
-        background: #090b16;
-        color: white;
-        font-family: Arial, sans-serif;
-        overflow: hidden;
-        user-select: none;
+    100% {
+        opacity: 0;
+        transform: translateY(-70px) scale(1.3);
     }
+}
 
-    #game {
-        position: relative;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        background:
-            radial-gradient(circle at 50% 20%, #202653 0%, #090b16 55%, #05060c 100%);
+/* PARTICLES */
+
+.particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: white;
+    pointer-events: none;
+    z-index: 30;
+    animation: particle .6s forwards;
+}
+
+@keyframes particle {
+    to {
+        opacity: 0;
+        transform: translate(var(--x),var(--y)) scale(.2);
     }
+}
 
-    /* Background stars */
-    .star {
-        position: absolute;
-        width: 3px;
-        height: 3px;
-        background: white;
-        border-radius: 50%;
-        opacity: 0.7;
-        animation: starMove linear infinite;
-    }
+/* MENUS */
 
-    @keyframes starMove {
-        from {
-            transform: translateY(-20px);
-        }
-        to {
-            transform: translateY(110vh);
-        }
-    }
+.screen {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2,3,12,.82);
+    backdrop-filter: blur(12px);
+    text-align: center;
+}
 
-    #ui {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        right: 20px;
-        display: flex;
-        justify-content: space-between;
-        z-index: 10;
-        font-size: 20px;
-        font-weight: bold;
-    }
+#gameOver {
+    display: none;
+}
 
-    .stat {
-        background: rgba(0,0,0,0.35);
-        padding: 10px 16px;
-        border-radius: 12px;
-        backdrop-filter: blur(8px);
-    }
+h1 {
+    font-size: clamp(50px,9vw,95px);
+    background: linear-gradient(90deg,#00f5ff,#a05cff,#ff3c83);
+    -webkit-background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 30px rgba(0,200,255,.2);
+}
 
-    #player {
-        position: absolute;
-        width: 50px;
-        height: 50px;
-        bottom: 40px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: linear-gradient(135deg, #00f5ff, #0066ff);
-        border-radius: 12px;
-        box-shadow:
-            0 0 15px #00eaff,
-            0 0 40px rgba(0,220,255,0.7);
-        z-index: 5;
-    }
+h2 {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
 
-    #player::after {
-        content: "";
-        position: absolute;
-        width: 16px;
-        height: 16px;
-        background: white;
-        border-radius: 50%;
-        left: 17px;
-        top: 10px;
-        box-shadow: 0 0 10px white;
-    }
+.subtitle {
+    color: #c7cae0;
+    margin: 8px;
+    font-size: 18px;
+}
 
-    .enemy {
-        position: absolute;
-        width: 40px;
-        height: 40px;
-        background: linear-gradient(135deg, #ff315c, #a000ff);
-        border-radius: 9px;
-        box-shadow:
-            0 0 15px #ff174f,
-            0 0 30px rgba(255,0,100,0.4);
-        z-index: 4;
-    }
+button {
+    margin-top: 25px;
+    padding: 15px 40px;
+    border: none;
+    border-radius: 14px;
+    color: white;
+    background: linear-gradient(90deg,#00d9ff,#705cff);
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 25px rgba(0,210,255,.5);
+    transition: .2s;
+}
 
-    .coin {
-        position: absolute;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: radial-gradient(circle, #fff36b 0%, #ffc400 60%, #ff8a00 100%);
-        box-shadow: 0 0 20px #ffd000;
-        z-index: 4;
-        animation: spin 0.7s linear infinite;
-    }
+button:hover {
+    transform: scale(1.08);
+}
 
-    @keyframes spin {
-        from {
-            transform: rotateY(0deg);
-        }
-        to {
-            transform: rotateY(360deg);
-        }
-    }
+/* MOBILE */
 
-    #startScreen,
-    #gameOver {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: rgba(3,4,12,0.78);
-        backdrop-filter: blur(10px);
-        z-index: 20;
-        text-align: center;
-    }
+#mobileControls {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    padding: 0 25px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 40;
+}
 
-    #gameOver {
-        display: none;
-    }
+.control {
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.1);
+    border: 2px solid rgba(255,255,255,.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    touch-action: none;
+}
 
-    h1 {
-        font-size: clamp(45px, 9vw, 90px);
-        background: linear-gradient(90deg, #00f5ff, #9d5cff, #ff3d81);
-        -webkit-background-clip: text;
-        color: transparent;
-        margin-bottom: 10px;
-    }
-
-    h2 {
-        font-size: 45px;
-        margin-bottom: 10px;
-    }
-
-    p {
-        color: #c6c9dd;
-        margin: 8px 0;
-        font-size: 18px;
-    }
-
-    button {
-        margin-top: 25px;
-        padding: 15px 35px;
-        border: none;
-        border-radius: 14px;
-        background: linear-gradient(90deg, #00d9ff, #6d5cff);
-        color: white;
-        font-size: 20px;
-        font-weight: bold;
-        cursor: pointer;
-        box-shadow: 0 0 25px rgba(0,210,255,0.4);
-        transition: 0.2s;
-    }
-
-    button:hover {
-        transform: scale(1.07);
-        box-shadow: 0 0 35px rgba(0,210,255,0.7);
-    }
-
+@media (min-width:700px) {
     #mobileControls {
-        position: absolute;
-        bottom: 25px;
-        left: 0;
-        right: 0;
-        display: flex;
-        justify-content: space-between;
-        padding: 0 25px;
-        z-index: 15;
-        pointer-events: none;
+        display:none;
     }
-
-    .control {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.12);
-        border: 2px solid rgba(255,255,255,0.25);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 35px;
-        pointer-events: auto;
-        touch-action: none;
-    }
-
-    @media (min-width: 700px) {
-        #mobileControls {
-            display: none;
-        }
-    }
+}
 </style>
 </head>
 
@@ -221,392 +331,725 @@
 
 <div id="game">
 
-    <div id="ui">
-        <div class="stat">⭐ Score: <span id="score">0</span></div>
-        <div class="stat">🪙 Coins: <span id="coins">0</span></div>
-        <div class="stat">🔥 Best: <span id="best">0</span></div>
+<div id="ui">
+    <div class="stat">⭐ <span id="score">0</span></div>
+    <div class="stat">🪙 <span id="coins">0</span></div>
+    <div class="stat">🔥 x<span id="comboNumber">1</span></div>
+    <div class="stat">🏆 <span id="best">0</span></div>
+    <div class="stat">LVL <span id="level">1</span></div>
+</div>
+
+<div id="combo">COMBO x2!</div>
+
+<div id="player"></div>
+
+<div id="mobileControls">
+    <div class="control" id="left">◀</div>
+    <div class="control" id="right">▶</div>
+</div>
+
+<div id="startScreen" class="screen">
+    <h1>DODGE RUSH</h1>
+
+    <div class="subtitle">
+        ⚡ Dodge enemies • 🪙 Collect coins • 🔥 Build combos
     </div>
 
-    <div id="player"></div>
-
-    <div id="mobileControls">
-        <div class="control" id="leftBtn">◀</div>
-        <div class="control" id="rightBtn">▶</div>
+    <div class="subtitle">
+        A/D or ← → to move
     </div>
 
-    <div id="startScreen">
-        <h1>DODGE RUSH</h1>
-        <p>⚡ Dodge the blocks. Collect coins. Survive.</p>
-        <p>🎮 Use A/D or ←/→ to move</p>
-        <button onclick="startGame()">PLAY</button>
+    <button onclick="startGame()">PLAY</button>
+</div>
+
+<div id="gameOver" class="screen">
+
+    <h2>💥 GAME OVER</h2>
+
+    <div class="subtitle">
+        Score: <strong id="finalScore">0</strong>
     </div>
 
-    <div id="gameOver">
-        <h2>💥 GAME OVER</h2>
-        <p>Your Score: <strong id="finalScore">0</strong></p>
-        <p>Coins Collected: <strong id="finalCoins">0</strong></p>
-        <p>Best Score: <strong id="finalBest">0</strong></p>
-        <button onclick="startGame()">PLAY AGAIN</button>
+    <div class="subtitle">
+        Coins: <strong id="finalCoins">0</strong>
     </div>
+
+    <div class="subtitle">
+        Best: <strong id="finalBest">0</strong>
+    </div>
+
+    <button onclick="startGame()">PLAY AGAIN</button>
+
+</div>
 
 </div>
 
 <script>
 
+/* =========================
+   VARIABLES
+========================= */
+
 const game = document.getElementById("game");
 const player = document.getElementById("player");
 
-const scoreText = document.getElementById("score");
-const coinsText = document.getElementById("coins");
-const bestText = document.getElementById("best");
+let playerX = innerWidth / 2;
 
-const startScreen = document.getElementById("startScreen");
-const gameOverScreen = document.getElementById("gameOver");
-
-const finalScore = document.getElementById("finalScore");
-const finalCoins = document.getElementById("finalCoins");
-const finalBest = document.getElementById("finalBest");
-
-let playerX;
 let score = 0;
 let coins = 0;
-let best = localStorage.getItem("dodgeBest") || 0;
+let combo = 1;
+
+let best = Number(localStorage.getItem("dodgeBest") || 0);
+
+let level = 1;
+
+let speed = 250;
+let spawnRate = 800;
+
+let enemyTimer = 0;
+let coinTimer = 0;
+let powerTimer = 0;
+
+let lastTime = 0;
+
+let running = false;
 
 let enemies = [];
 let coinObjects = [];
+let powers = [];
 
-let gameRunning = false;
-let lastTime = 0;
-let enemyTimer = 0;
-let coinTimer = 0;
-
-let speed = 260;
-let spawnRate = 750;
+let shield = false;
+let magnet = false;
+let slow = false;
 
 let keys = {
-    left: false,
-    right: false
+    left:false,
+    right:false
 };
 
-bestText.textContent = best;
+document.getElementById("best").textContent = best;
 
 
-/* -----------------------------
-   CREATE BACKGROUND STARS
------------------------------ */
+/* =========================
+   STARS
+========================= */
 
-for (let i = 0; i < 70; i++) {
+for(let i=0;i<80;i++){
 
     const star = document.createElement("div");
 
     star.className = "star";
 
-    star.style.left = Math.random() * 100 + "%";
-    star.style.top = Math.random() * 100 + "%";
+    star.style.left =
+        Math.random()*100+"%";
+
+    star.style.top =
+        Math.random()*100+"%";
 
     star.style.animationDuration =
-        (2 + Math.random() * 5) + "s";
+        (2+Math.random()*5)+"s";
 
     star.style.animationDelay =
-        (-Math.random() * 5) + "s";
+        (-Math.random()*5)+"s";
 
     game.appendChild(star);
 }
 
 
-/* -----------------------------
-   START GAME
------------------------------ */
+/* =========================
+   START
+========================= */
 
-function startGame() {
+function startGame(){
 
-    startScreen.style.display = "none";
-    gameOverScreen.style.display = "none";
+    document.getElementById("startScreen").style.display="none";
+    document.getElementById("gameOver").style.display="none";
 
-    enemies.forEach(e => e.element.remove());
-    coinObjects.forEach(c => c.element.remove());
+    enemies.forEach(e=>e.el.remove());
+    coinObjects.forEach(c=>c.el.remove());
+    powers.forEach(p=>p.el.remove());
 
-    enemies = [];
-    coinObjects = [];
+    enemies=[];
+    coinObjects=[];
+    powers=[];
 
-    score = 0;
-    coins = 0;
+    score=0;
+    coins=0;
+    combo=1;
 
-    speed = 260;
-    spawnRate = 750;
+    speed=250;
+    spawnRate=800;
 
-    scoreText.textContent = score;
-    coinsText.textContent = coins;
+    level=1;
 
-    playerX = window.innerWidth / 2;
+    shield=false;
+    magnet=false;
+    slow=false;
 
-    gameRunning = true;
+    player.classList.remove("shield");
 
-    lastTime = performance.now();
+    updateUI();
 
-    requestAnimationFrame(gameLoop);
+    playerX=innerWidth/2;
+
+    running=true;
+
+    lastTime=performance.now();
+
+    requestAnimationFrame(loop);
 }
 
 
-/* -----------------------------
+/* =========================
    GAME LOOP
------------------------------ */
+========================= */
 
-function gameLoop(time) {
+function loop(time){
 
-    if (!gameRunning) return;
+    if(!running) return;
 
-    const delta = Math.min((time - lastTime) / 1000, 0.05);
-
-    lastTime = time;
-
-    updatePlayer(delta);
-    spawnObjects(delta);
-    updateEnemies(delta);
-    updateCoins(delta);
-    increaseDifficulty(delta);
-
-    score += delta * 10;
-
-    scoreText.textContent = Math.floor(score);
-
-    requestAnimationFrame(gameLoop);
-}
-
-
-/* -----------------------------
-   PLAYER
------------------------------ */
-
-function updatePlayer(delta) {
-
-    const moveSpeed = 450;
-
-    if (keys.left) {
-        playerX -= moveSpeed * delta;
-    }
-
-    if (keys.right) {
-        playerX += moveSpeed * delta;
-    }
-
-    const half = player.offsetWidth / 2;
-
-    playerX = Math.max(
-        half,
-        Math.min(window.innerWidth - half, playerX)
+    let dt=Math.min(
+        (time-lastTime)/1000,
+        .05
     );
 
-    player.style.left = playerX + "px";
+    lastTime=time;
+
+    movePlayer(dt);
+
+    spawnStuff(dt);
+
+    updateEnemies(dt);
+
+    updateCoins(dt);
+
+    updatePowers(dt);
+
+    score+=dt*12*combo;
+
+    level=Math.floor(score/500)+1;
+
+    speed+=dt*4;
+
+    spawnRate=Math.max(
+        250,
+        800-level*25
+    );
+
+    updateUI();
+
+    requestAnimationFrame(loop);
 }
 
 
-/* -----------------------------
+/* =========================
+   PLAYER
+========================= */
+
+function movePlayer(dt){
+
+    let movement=480;
+
+    if(keys.left)
+        playerX-=movement*dt;
+
+    if(keys.right)
+        playerX+=movement*dt;
+
+    const half=24;
+
+    playerX=Math.max(
+        half,
+        Math.min(innerWidth-half,playerX)
+    );
+
+    player.style.left=playerX+"px";
+}
+
+
+/* =========================
    SPAWNING
------------------------------ */
+========================= */
 
-function spawnObjects(delta) {
+function spawnStuff(dt){
 
-    enemyTimer += delta * 1000;
-    coinTimer += delta * 1000;
+    enemyTimer+=dt*1000;
+    coinTimer+=dt*1000;
+    powerTimer+=dt*1000;
 
-    if (enemyTimer >= spawnRate) {
+    if(enemyTimer>spawnRate){
 
         spawnEnemy();
 
-        enemyTimer = 0;
+        enemyTimer=0;
     }
 
-    if (coinTimer >= 1300) {
+    if(coinTimer>1200){
 
         spawnCoin();
 
-        coinTimer = 0;
+        coinTimer=0;
+    }
+
+    if(powerTimer>7000){
+
+        spawnPower();
+
+        powerTimer=0;
     }
 }
 
 
-/* -----------------------------
-   ENEMY
------------------------------ */
+/* =========================
+   ENEMIES
+========================= */
 
-function spawnEnemy() {
+function spawnEnemy(){
 
-    const enemy = document.createElement("div");
+    const el=document.createElement("div");
 
-    enemy.className = "enemy";
+    let type=Math.random();
 
-    const x =
-        Math.random() *
-        (window.innerWidth - 50);
+    let size=40;
+    let enemySpeed=speed;
 
-    enemy.style.left = x + "px";
-    enemy.style.top = "-50px";
+    if(type<.18){
 
-    game.appendChild(enemy);
+        size=65;
+        el.className="enemy big";
+        enemySpeed*=.7;
+
+    }else if(type<.4){
+
+        size=35;
+        el.className="enemy fast";
+        enemySpeed*=1.7;
+
+    }else{
+
+        el.className="enemy";
+    }
+
+    el.style.width=size+"px";
+    el.style.height=size+"px";
+
+    let x=Math.random()*(innerWidth-size);
+
+    el.style.left=x+"px";
+    el.style.top="-70px";
+
+    game.appendChild(el);
 
     enemies.push({
-        element: enemy,
-        x: x,
-        y: -50,
-        speed: speed + Math.random() * 120
+        el,
+        x,
+        y:-70,
+        speed:enemySpeed
     });
 }
 
 
-/* -----------------------------
-   COIN
------------------------------ */
+/* =========================
+   COINS
+========================= */
 
-function spawnCoin() {
+function spawnCoin(){
 
-    const coin = document.createElement("div");
+    const el=document.createElement("div");
 
-    coin.className = "coin";
+    el.className="coin";
 
-    const x =
-        Math.random() *
-        (window.innerWidth - 35);
+    let x=Math.random()*(innerWidth-30);
 
-    coin.style.left = x + "px";
-    coin.style.top = "-35px";
+    el.style.left=x+"px";
+    el.style.top="-40px";
 
-    game.appendChild(coin);
+    game.appendChild(el);
 
     coinObjects.push({
-        element: coin,
-        x: x,
-        y: -35,
-        speed: speed * 0.8
+        el,
+        x,
+        y:-40,
+        speed:speed*.75
     });
 }
 
 
-/* -----------------------------
-   UPDATE ENEMIES
------------------------------ */
+/* =========================
+   POWER UPS
+========================= */
 
-function updateEnemies(delta) {
+function spawnPower(){
 
-    for (let i = enemies.length - 1; i >= 0; i--) {
+    const el=document.createElement("div");
 
-        const enemy = enemies[i];
+    let types=[
+        ["🛡️","shieldPower","shield"],
+        ["🧲","magnetPower","magnet"],
+        ["🐌","slowPower","slow"]
+    ];
 
-        enemy.y += enemy.speed * delta;
+    let chosen=
+        types[Math.floor(Math.random()*types.length)];
 
-        enemy.element.style.top =
-            enemy.y + "px";
+    el.className="power "+chosen[1];
+    el.textContent=chosen[0];
 
-        if (collision(
-            player,
-            enemy.element
-        )) {
+    let x=Math.random()*(innerWidth-40);
 
-            endGame();
+    el.style.left=x+"px";
+    el.style.top="-50px";
 
-            return;
+    game.appendChild(el);
+
+    powers.push({
+        el,
+        x,
+        y:-50,
+        type:chosen[2],
+        speed:speed*.6
+    });
+}
+
+
+/* =========================
+   ENEMY UPDATE
+========================= */
+
+function updateEnemies(dt){
+
+    for(let i=enemies.length-1;i>=0;i--){
+
+        let e=enemies[i];
+
+        let multiplier=slow?.45:1;
+
+        e.y+=e.speed*multiplier*dt;
+
+        e.el.style.top=e.y+"px";
+
+        if(hit(player,e.el)){
+
+            if(shield){
+
+                shield=false;
+
+                player.classList.remove("shield");
+
+                explode(
+                    e.x+20,
+                    e.y+20
+                );
+
+                e.el.remove();
+
+                enemies.splice(i,1);
+
+                showPopup(
+                    "🛡️ BLOCKED!",
+                    e.x,
+                    e.y
+                );
+
+            }else{
+
+                gameOver();
+
+                return;
+            }
         }
 
-        if (enemy.y > window.innerHeight + 60) {
+        if(e.y>innerHeight+100){
 
-            enemy.element.remove();
+            e.el.remove();
 
-            enemies.splice(i, 1);
+            enemies.splice(i,1);
+
+            combo=1;
         }
     }
 }
 
 
-/* -----------------------------
-   UPDATE COINS
------------------------------ */
+/* =========================
+   COIN UPDATE
+========================= */
 
-function updateCoins(delta) {
+function updateCoins(dt){
 
-    for (let i = coinObjects.length - 1; i >= 0; i--) {
+    for(let i=coinObjects.length-1;i>=0;i--){
 
-        const coin = coinObjects[i];
+        let c=coinObjects[i];
 
-        coin.y += coin.speed * delta;
+        c.y+=c.speed*dt;
 
-        coin.element.style.top =
-            coin.y + "px";
+        if(magnet){
 
-        if (collision(
-            player,
-            coin.element
-        )) {
+            let dx=playerX-c.x;
+
+            c.x+=dx*dt*4;
+        }
+
+        c.el.style.left=c.x+"px";
+        c.el.style.top=c.y+"px";
+
+        if(hit(player,c.el)){
 
             coins++;
 
-            score += 100;
+            score+=100*combo;
 
-            coinsText.textContent = coins;
+            combo++;
 
-            coin.element.remove();
+            if(combo>10)
+                combo=10;
 
-            coinObjects.splice(i, 1);
+            showPopup(
+                "🪙 +"+(100*combo),
+                c.x,
+                c.y
+            );
+
+            showCombo();
+
+            explode(c.x,c.y);
+
+            c.el.remove();
+
+            coinObjects.splice(i,1);
 
             continue;
         }
 
-        if (coin.y > window.innerHeight + 40) {
+        if(c.y>innerHeight+50){
 
-            coin.element.remove();
+            c.el.remove();
 
-            coinObjects.splice(i, 1);
+            coinObjects.splice(i,1);
         }
     }
 }
 
 
-/* -----------------------------
-   COLLISION
------------------------------ */
+/* =========================
+   POWER UPDATE
+========================= */
 
-function collision(a, b) {
+function updatePowers(dt){
 
-    const r1 = a.getBoundingClientRect();
-    const r2 = b.getBoundingClientRect();
+    for(let i=powers.length-1;i>=0;i--){
 
-    return !(
-        r1.right < r2.left ||
-        r1.left > r2.right ||
-        r1.bottom < r2.top ||
-        r1.top > r2.bottom
-    );
-}
+        let p=powers[i];
 
+        p.y+=p.speed*dt;
 
-/* -----------------------------
-   DIFFICULTY
------------------------------ */
+        p.el.style.top=p.y+"px";
 
-function increaseDifficulty(delta) {
+        if(hit(player,p.el)){
 
-    speed += delta * 4;
+            activatePower(p.type);
 
-    spawnRate -= delta * 4;
+            p.el.remove();
 
-    if (spawnRate < 250) {
-        spawnRate = 250;
+            powers.splice(i,1);
+
+            continue;
+        }
+
+        if(p.y>innerHeight+60){
+
+            p.el.remove();
+
+            powers.splice(i,1);
+        }
     }
 }
 
 
-/* -----------------------------
+/* =========================
+   POWER ACTIVATION
+========================= */
+
+function activatePower(type){
+
+    if(type==="shield"){
+
+        shield=true;
+
+        player.classList.add("shield");
+
+        showPopup(
+            "🛡️ SHIELD!",
+            playerX,
+            innerHeight-100
+        );
+
+    }
+
+    if(type==="magnet"){
+
+        magnet=true;
+
+        showPopup(
+            "🧲 MAGNET!",
+            playerX,
+            innerHeight-100
+        );
+
+        setTimeout(()=>{
+            magnet=false;
+        },7000);
+    }
+
+    if(type==="slow"){
+
+        slow=true;
+
+        showPopup(
+            "🐌 SLOW MOTION!",
+            playerX,
+            innerHeight-100
+        );
+
+        setTimeout(()=>{
+            slow=false;
+        },5000);
+    }
+}
+
+
+/* =========================
+   COLLISION
+========================= */
+
+function hit(a,b){
+
+    let A=a.getBoundingClientRect();
+    let B=b.getBoundingClientRect();
+
+    return !(
+        A.right<B.left ||
+        A.left>B.right ||
+        A.bottom<B.top ||
+        A.top>B.bottom
+    );
+}
+
+
+/* =========================
+   PARTICLES
+========================= */
+
+function explode(x,y){
+
+    for(let i=0;i<12;i++){
+
+        let p=document.createElement("div");
+
+        p.className="particle";
+
+        p.style.left=x+"px";
+        p.style.top=y+"px";
+
+        let angle=Math.random()*Math.PI*2;
+        let distance=30+Math.random()*60;
+
+        p.style.setProperty(
+            "--x",
+            Math.cos(angle)*distance+"px"
+        );
+
+        p.style.setProperty(
+            "--y",
+            Math.sin(angle)*distance+"px"
+        );
+
+        game.appendChild(p);
+
+        setTimeout(()=>{
+            p.remove();
+        },600);
+    }
+}
+
+
+/* =========================
+   POPUP
+========================= */
+
+function showPopup(text,x,y){
+
+    let p=document.createElement("div");
+
+    p.className="popup";
+
+    p.textContent=text;
+
+    p.style.left=x+"px";
+    p.style.top=y+"px";
+
+    game.appendChild(p);
+
+    setTimeout(()=>{
+        p.remove();
+    },800);
+}
+
+
+function showCombo(){
+
+    if(combo<2) return;
+
+    let c=document.getElementById("combo");
+
+    c.textContent="🔥 COMBO x"+combo+"!";
+
+    c.style.opacity=1;
+
+    clearTimeout(window.comboTimer);
+
+    window.comboTimer=setTimeout(()=>{
+        c.style.opacity=0;
+    },700);
+}
+
+
+/* =========================
+   UI
+========================= */
+
+function updateUI(){
+
+    document.getElementById("score")
+        .textContent=Math.floor(score);
+
+    document.getElementById("coins")
+        .textContent=coins;
+
+    document.getElementById("comboNumber")
+        .textContent=combo;
+
+    document.getElementById("level")
+        .textContent=level;
+
+    document.getElementById("best")
+        .textContent=best;
+}
+
+
+/* =========================
    GAME OVER
------------------------------ */
+========================= */
 
-function endGame() {
+function gameOver(){
 
-    gameRunning = false;
+    running=false;
 
-    const final = Math.floor(score);
+    let final=Math.floor(score);
 
-    if (final > best) {
+    if(final>best){
 
-        best = final;
+        best=final;
 
         localStorage.setItem(
             "dodgeBest",
@@ -614,98 +1057,101 @@ function endGame() {
         );
     }
 
-    finalScore.textContent = final;
-    finalCoins.textContent = coins;
-    finalBest.textContent = best;
+    document.getElementById("finalScore")
+        .textContent=final;
 
-    bestText.textContent = best;
+    document.getElementById("finalCoins")
+        .textContent=coins;
 
-    gameOverScreen.style.display = "flex";
+    document.getElementById("finalBest")
+        .textContent=best;
+
+    document.getElementById("gameOver")
+        .style.display="flex";
 }
 
 
-/* -----------------------------
-   KEYBOARD CONTROLS
------------------------------ */
+/* =========================
+   KEYBOARD
+========================= */
 
-document.addEventListener("keydown", e => {
+document.addEventListener("keydown",e=>{
 
-    if (
-        e.key === "ArrowLeft" ||
-        e.key.toLowerCase() === "a"
-    ) {
-        keys.left = true;
-    }
+    if(
+        e.key==="ArrowLeft" ||
+        e.key.toLowerCase()==="a"
+    )
+        keys.left=true;
 
-    if (
-        e.key === "ArrowRight" ||
-        e.key.toLowerCase() === "d"
-    ) {
-        keys.right = true;
-    }
-
+    if(
+        e.key==="ArrowRight" ||
+        e.key.toLowerCase()==="d"
+    )
+        keys.right=true;
 });
 
 
-document.addEventListener("keyup", e => {
+document.addEventListener("keyup",e=>{
 
-    if (
-        e.key === "ArrowLeft" ||
-        e.key.toLowerCase() === "a"
-    ) {
-        keys.left = false;
-    }
+    if(
+        e.key==="ArrowLeft" ||
+        e.key.toLowerCase()==="a"
+    )
+        keys.left=false;
 
-    if (
-        e.key === "ArrowRight" ||
-        e.key.toLowerCase() === "d"
-    ) {
-        keys.right = false;
-    }
-
+    if(
+        e.key==="ArrowRight" ||
+        e.key.toLowerCase()==="d"
+    )
+        keys.right=false;
 });
 
 
-/* -----------------------------
-   MOBILE CONTROLS
------------------------------ */
+/* =========================
+   MOBILE
+========================= */
 
-const leftBtn =
-    document.getElementById("leftBtn");
+const leftBtn=
+    document.getElementById("left");
 
-const rightBtn =
-    document.getElementById("rightBtn");
+const rightBtn=
+    document.getElementById("right");
 
-leftBtn.addEventListener("pointerdown", () => { 
-    keys.left = true;
-});
+leftBtn.addEventListener(
+    "pointerdown",
+    ()=>keys.left=true
+);
 
-leftBtn.addEventListener("pointerup", () => {
-    keys.left = false;
-});
+leftBtn.addEventListener(
+    "pointerup",
+    ()=>keys.left=false
+);
 
-leftBtn.addEventListener("pointerleave", () => {
-    keys.left = false;
-});
+leftBtn.addEventListener(
+    "pointerleave",
+    ()=>keys.left=false
+);
 
-rightBtn.addEventListener("pointerdown", () => {
-    keys.right = true;
-});
+rightBtn.addEventListener(
+    "pointerdown",
+    ()=>keys.right=true
+);
 
-rightBtn.addEventListener("pointerup", () => {
-    keys.right = false;
-});
+rightBtn.addEventListener(
+    "pointerup",
+    ()=>keys.right=false
+);
 
-rightBtn.addEventListener("pointerleave", () => {
-    keys.right = false;
-});
+rightBtn.addEventListener(
+    "pointerleave",
+    ()=>keys.right=false
+);
 
-
-/* Prevent scrolling on mobile */
-
-document.addEventListener("touchmove", e => {
-    e.preventDefault();
-}, { passive: false });
+document.addEventListener(
+    "touchmove",
+    e=>e.preventDefault(),
+    {passive:false}
+);
 
 </script>
 

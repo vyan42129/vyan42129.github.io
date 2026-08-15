@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dodge Rush</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background: #090b16;
+        color: white;
+        font-family: Arial, sans-serif;
+        overflow: hidden;
+        user-select: none;
+    }
+
+    #game {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 50% 20%, #202653 0%, #090b16 55%, #05060c 100%);
+    }
+
+    /* Background stars */
+    .star {
+        position: absolute;
+        width: 3px;
+        height: 3px;
+        background: white;
+        border-radius: 50%;
+        opacity: 0.7;
+        animation: starMove linear infinite;
+    }
+
+    @keyframes starMove {
+        from {
+            transform: translateY(-20px);
+        }
+        to {
+            transform: translateY(110vh);
+        }
+    }
+
+    #ui {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        display: flex;
+        justify-content: space-between;
+        z-index: 10;
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .stat {
+        background: rgba(0,0,0,0.35);
+        padding: 10px 16px;
+        border-radius: 12px;
+        backdrop-filter: blur(8px);
+    }
+
+    #player {
+        position: absolute;
+        width: 50px;
+        height: 50px;
+        bottom: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #00f5ff, #0066ff);
+        border-radius: 12px;
+        box-shadow:
+            0 0 15px #00eaff,
+            0 0 40px rgba(0,220,255,0.7);
+        z-index: 5;
+    }
+
+    #player::after {
+        content: "";
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        background: white;
+        border-radius: 50%;
+        left: 17px;
+        top: 10px;
+        box-shadow: 0 0 10px white;
+    }
+
+    .enemy {
+        position: absolute;
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #ff315c, #a000ff);
+        border-radius: 9px;
+        box-shadow:
+            0 0 15px #ff174f,
+            0 0 30px rgba(255,0,100,0.4);
+        z-index: 4;
+    }
+
+    .coin {
+        position: absolute;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #fff36b 0%, #ffc400 60%, #ff8a00 100%);
+        box-shadow: 0 0 20px #ffd000;
+        z-index: 4;
+        animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotateY(0deg);
+        }
+        to {
+            transform: rotateY(360deg);
+        }
+    }
+
+    #startScreen,
+    #gameOver {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(3,4,12,0.78);
+        backdrop-filter: blur(10px);
+        z-index: 20;
+        text-align: center;
+    }
+
+    #gameOver {
+        display: none;
+    }
+
+    h1 {
+        font-size: clamp(45px, 9vw, 90px);
+        background: linear-gradient(90deg, #00f5ff, #9d5cff, #ff3d81);
+        -webkit-background-clip: text;
+        color: transparent;
+        margin-bottom: 10px;
+    }
+
+    h2 {
+        font-size: 45px;
+        margin-bottom: 10px;
+    }
+
+    p {
+        color: #c6c9dd;
+        margin: 8px 0;
+        font-size: 18px;
+    }
+
+    button {
+        margin-top: 25px;
+        padding: 15px 35px;
+        border: none;
+        border-radius: 14px;
+        background: linear-gradient(90deg, #00d9ff, #6d5cff);
+        color: white;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 0 25px rgba(0,210,255,0.4);
+        transition: 0.2s;
+    }
+
+    button:hover {
+        transform: scale(1.07);
+        box-shadow: 0 0 35px rgba(0,210,255,0.7);
+    }
+
+    #mobileControls {
+        position: absolute;
+        bottom: 25px;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 25px;
+        z-index: 15;
+        pointer-events: none;
+    }
+
+    .control {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.12);
+        border: 2px solid rgba(255,255,255,0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 35px;
+        pointer-events: auto;
+        touch-action: none;
+    }
+
+    @media (min-width: 700px) {
+        #mobileControls {
+            display: none;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <div id="ui">
+        <div class="stat">⭐ Score: <span id="score">0</span></div>
+        <div class="stat">🪙 Coins: <span id="coins">0</span></div>
+        <div class="stat">🔥 Best: <span id="best">0</span></div>
+    </div>
+
+    <div id="player"></div>
+
+    <div id="mobileControls">
+        <div class="control" id="leftBtn">◀</div>
+        <div class="control" id="rightBtn">▶</div>
+    </div>
+
+    <div id="startScreen">
+        <h1>DODGE RUSH</h1>
+        <p>⚡ Dodge the blocks. Collect coins. Survive.</p>
+        <p>🎮 Use A/D or ←/→ to move</p>
+        <button onclick="startGame()">PLAY</button>
+    </div>
+
+    <div id="gameOver">
+        <h2>💥 GAME OVER</h2>
+        <p>Your Score: <strong id="finalScore">0</strong></p>
+        <p>Coins Collected: <strong id="finalCoins">0</strong></p>
+        <p>Best Score: <strong id="finalBest">0</strong></p>
+        <button onclick="startGame()">PLAY AGAIN</button>
+    </div>
+
+</div>
+
+<script>
+
+const game = document.getElementById("game");
+const player = document.getElementById("player");
+
+const scoreText = document.getElementById("score");
+const coinsText = document.getElementById("coins");
+const bestText = document.getElementById("best");
+
+const startScreen = document.getElementById("startScreen");
+const gameOverScreen = document.getElementById("gameOver");
+
+const finalScore = document.getElementById("finalScore");
+const finalCoins = document.getElementById("finalCoins");
+const finalBest = document.getElementById("finalBest");
+
+let playerX;
+let score = 0;
+let coins = 0;
+let best = localStorage.getItem("dodgeBest") || 0;
+
+let enemies = [];
+let coinObjects = [];
+
+let gameRunning = false;
+let lastTime = 0;
+let enemyTimer = 0;
+let coinTimer = 0;
+
+let speed = 260;
+let spawnRate = 750;
+
+let keys = {
+    left: false,
+    right: false
+};
+
+bestText.textContent = best;
+
+
+/* -----------------------------
+   CREATE BACKGROUND STARS
+----------------------------- */
+
+for (let i = 0; i < 70; i++) {
+
+    const star = document.createElement("div");
+
+    star.className = "star";
+
+    star.style.left = Math.random() * 100 + "%";
+    star.style.top = Math.random() * 100 + "%";
+
+    star.style.animationDuration =
+        (2 + Math.random() * 5) + "s";
+
+    star.style.animationDelay =
+        (-Math.random() * 5) + "s";
+
+    game.appendChild(star);
+}
+
+
+/* -----------------------------
+   START GAME
+----------------------------- */
+
+function startGame() {
+
+    startScreen.style.display = "none";
+    gameOverScreen.style.display = "none";
+
+    enemies.forEach(e => e.element.remove());
+    coinObjects.forEach(c => c.element.remove());
+
+    enemies = [];
+    coinObjects = [];
+
+    score = 0;
+    coins = 0;
+
+    speed = 260;
+    spawnRate = 750;
+
+    scoreText.textContent = score;
+    coinsText.textContent = coins;
+
+    playerX = window.innerWidth / 2;
+
+    gameRunning = true;
+
+    lastTime = performance.now();
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+/* -----------------------------
+   GAME LOOP
+----------------------------- */
+
+function gameLoop(time) {
+
+    if (!gameRunning) return;
+
+    const delta = Math.min((time - lastTime) / 1000, 0.05);
+
+    lastTime = time;
+
+    updatePlayer(delta);
+    spawnObjects(delta);
+    updateEnemies(delta);
+    updateCoins(delta);
+    increaseDifficulty(delta);
+
+    score += delta * 10;
+
+    scoreText.textContent = Math.floor(score);
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+/* -----------------------------
+   PLAYER
+----------------------------- */
+
+function updatePlayer(delta) {
+
+    const moveSpeed = 450;
+
+    if (keys.left) {
+        playerX -= moveSpeed * delta;
+    }
+
+    if (keys.right) {
+        playerX += moveSpeed * delta;
+    }
+
+    const half = player.offsetWidth / 2;
+
+    playerX = Math.max(
+        half,
+        Math.min(window.innerWidth - half, playerX)
+    );
+
+    player.style.left = playerX + "px";
+}
+
+
+/* -----------------------------
+   SPAWNING
+----------------------------- */
+
+function spawnObjects(delta) {
+
+    enemyTimer += delta * 1000;
+    coinTimer += delta * 1000;
+
+    if (enemyTimer >= spawnRate) {
+
+        spawnEnemy();
+
+        enemyTimer = 0;
+    }
+
+    if (coinTimer >= 1300) {
+
+        spawnCoin();
+
+        coinTimer = 0;
+    }
+}
+
+
+/* -----------------------------
+   ENEMY
+----------------------------- */
+
+function spawnEnemy() {
+
+    const enemy = document.createElement("div");
+
+    enemy.className = "enemy";
+
+    const x =
+        Math.random() *
+        (window.innerWidth - 50);
+
+    enemy.style.left = x + "px";
+    enemy.style.top = "-50px";
+
+    game.appendChild(enemy);
+
+    enemies.push({
+        element: enemy,
+        x: x,
+        y: -50,
+        speed: speed + Math.random() * 120
+    });
+}
+
+
+/* -----------------------------
+   COIN
+----------------------------- */
+
+function spawnCoin() {
+
+    const coin = document.createElement("div");
+
+    coin.className = "coin";
+
+    const x =
+        Math.random() *
+        (window.innerWidth - 35);
+
+    coin.style.left = x + "px";
+    coin.style.top = "-35px";
+
+    game.appendChild(coin);
+
+    coinObjects.push({
+        element: coin,
+        x: x,
+        y: -35,
+        speed: speed * 0.8
+    });
+}
+
+
+/* -----------------------------
+   UPDATE ENEMIES
+----------------------------- */
+
+function updateEnemies(delta) {
+
+    for (let i = enemies.length - 1; i >= 0; i--) {
+
+        const enemy = enemies[i];
+
+        enemy.y += enemy.speed * delta;
+
+        enemy.element.style.top =
+            enemy.y + "px";
+
+        if (collision(
+            player,
+            enemy.element
+        )) {
+
+            endGame();
+
+            return;
+        }
+
+        if (enemy.y > window.innerHeight + 60) {
+
+            enemy.element.remove();
+
+            enemies.splice(i, 1);
+        }
+    }
+}
+
+
+/* -----------------------------
+   UPDATE COINS
+----------------------------- */
+
+function updateCoins(delta) {
+
+    for (let i = coinObjects.length - 1; i >= 0; i--) {
+
+        const coin = coinObjects[i];
+
+        coin.y += coin.speed * delta;
+
+        coin.element.style.top =
+            coin.y + "px";
+
+        if (collision(
+            player,
+            coin.element
+        )) {
+
+            coins++;
+
+            score += 100;
+
+            coinsText.textContent = coins;
+
+            coin.element.remove();
+
+            coinObjects.splice(i, 1);
+
+            continue;
+        }
+
+        if (coin.y > window.innerHeight + 40) {
+
+            coin.element.remove();
+
+            coinObjects.splice(i, 1);
+        }
+    }
+}
+
+
+/* -----------------------------
+   COLLISION
+----------------------------- */
+
+function collision(a, b) {
+
+    const r1 = a.getBoundingClientRect();
+    const r2 = b.getBoundingClientRect();
+
+    return !(
+        r1.right < r2.left ||
+        r1.left > r2.right ||
+        r1.bottom < r2.top ||
+        r1.top > r2.bottom
+    );
+}
+
+
+/* -----------------------------
+   DIFFICULTY
+----------------------------- */
+
+function increaseDifficulty(delta) {
+
+    speed += delta * 4;
+
+    spawnRate -= delta * 4;
+
+    if (spawnRate < 250) {
+        spawnRate = 250;
+    }
+}
+
+
+/* -----------------------------
+   GAME OVER
+----------------------------- */
+
+function endGame() {
+
+    gameRunning = false;
+
+    const final = Math.floor(score);
+
+    if (final > best) {
+
+        best = final;
+
+        localStorage.setItem(
+            "dodgeBest",
+            best
+        );
+    }
+
+    finalScore.textContent = final;
+    finalCoins.textContent = coins;
+    finalBest.textContent = best;
+
+    bestText.textContent = best;
+
+    gameOverScreen.style.display = "flex";
+}
+
+
+/* -----------------------------
+   KEYBOARD CONTROLS
+----------------------------- */
+
+document.addEventListener("keydown", e => {
+
+    if (
+        e.key === "ArrowLeft" ||
+        e.key.toLowerCase() === "a"
+    ) {
+        keys.left = true;
+    }
+
+    if (
+        e.key === "ArrowRight" ||
+        e.key.toLowerCase() === "d"
+    ) {
+        keys.right = true;
+    }
+
+});
+
+
+document.addEventListener("keyup", e => {
+
+    if (
+        e.key === "ArrowLeft" ||
+        e.key.toLowerCase() === "a"
+    ) {
+        keys.left = false;
+    }
+
+    if (
+        e.key === "ArrowRight" ||
+        e.key.toLowerCase() === "d"
+    ) {
+        keys.right = false;
+    }
+
+});
+
+
+/* -----------------------------
+   MOBILE CONTROLS
+----------------------------- */
+
+const leftBtn =
+    document.getElementById("leftBtn");
+
+const rightBtn =
+    document.getElementById("rightBtn");
+
+leftBtn.addEventListener("pointerdown", () => { 
+    keys.left = true;
+});
+
+leftBtn.addEventListener("pointerup", () => {
+    keys.left = false;
+});
+
+leftBtn.addEventListener("pointerleave", () => {
+    keys.left = false;
+});
+
+rightBtn.addEventListener("pointerdown", () => {
+    keys.right = true;
+});
+
+rightBtn.addEventListener("pointerup", () => {
+    keys.right = false;
+});
+
+rightBtn.addEventListener("pointerleave", () => {
+    keys.right = false;
+});
+
+
+/* Prevent scrolling on mobile */
+
+document.addEventListener("touchmove", e => {
+    e.preventDefault();
+}, { passive: false });
+
+</script>
+
+</body>
+</html>

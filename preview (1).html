@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dodge Rush — Fixed Build</title>
+<style>
+*{box-sizing:border-box}body{margin:0;overflow:hidden;background:#060816;color:#fff;font-family:Arial,sans-serif}
+#game{position:relative;width:100vw;height:100vh;overflow:hidden;background:radial-gradient(circle at 50% 10%,#25346d,#080a18 55%,#02030a)}
+.star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;opacity:.6}
+.screen{position:absolute;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(3,5,18,.93);text-align:center}
+h1{font-size:clamp(48px,9vw,90px);margin:0 0 10px;background:linear-gradient(90deg,#00eaff,#8b5cff,#ff3d91);-webkit-background-clip:text;color:transparent}
+h2{font-size:40px;margin:0 0 15px}.sub{color:#cbd0e8;margin:5px}
+button{border:0;border-radius:12px;padding:12px 22px;margin:6px;background:linear-gradient(90deg,#00d9ff,#6957ff);color:#fff;font-size:16px;font-weight:700;cursor:pointer}
+button:hover{transform:scale(1.05)}button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+#menuButtons{max-width:600px;display:flex;justify-content:center;flex-wrap:wrap}
+#ui{position:absolute;top:12px;left:10px;right:10px;z-index:50;display:flex;gap:7px;justify-content:center;flex-wrap:wrap}
+.stat{padding:7px 11px;background:rgba(0,0,0,.5);border:1px solid #ffffff22;border-radius:10px;font-weight:700}
+#player{position:absolute;width:46px;height:46px;border-radius:12px;bottom:55px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#00f5ff,#1765ff);box-shadow:0 0 20px #00eaff;z-index:20}
+#player:after{content:"";position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;left:17px;top:9px}
+.enemy{position:absolute;border-radius:9px;background:linear-gradient(135deg,#ff1754,#8b00ff);box-shadow:0 0 18px #ff176688;z-index:10}
+.coin{position:absolute;width:27px;height:27px;border-radius:50%;background:#ffd21a;box-shadow:0 0 18px #ffd21a;z-index:11}
+.power{position:absolute;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;z-index:12}
+#boss{display:none;position:absolute;width:120px;height:100px;border-radius:25px;background:linear-gradient(135deg,#ff4868,#7200c8);box-shadow:0 0 35px #ff174f;z-index:18;font-size:65px;text-align:center;line-height:100px}
+#bossbar{display:none;position:absolute;top:60px;left:12%;width:76%;height:20px;border:2px solid white;border-radius:15px;z-index:40;background:#28000a;overflow:hidden}
+#bosshealth{height:100%;width:100%;background:linear-gradient(90deg,#ff174f,#ff9d00)}
+#bosstext{position:absolute;display:none;top:88px;left:0;right:0;z-index:40;text-align:center;font-weight:bold;font-size:19px}
+.bullet{position:absolute;width:8px;height:18px;border-radius:8px;background:#00f5ff;box-shadow:0 0 12px #00f5ff;z-index:19}
+.bossbullet{position:absolute;width:17px;height:17px;border-radius:50%;background:#ff174f;box-shadow:0 0 15px #ff174f;z-index:19}
+.popup{position:absolute;z-index:200;font-size:22px;font-weight:bold;pointer-events:none;animation:pop .8s forwards}
+@keyframes pop{to{opacity:0;transform:translateY(-60px)}}
+.card{width:min(460px,90vw);padding:12px;margin:5px;background:#ffffff10;border:1px solid #ffffff18;border-radius:12px;text-align:left}
+#gameover,#shop,#missions,#achievements,#pause{display:none}
+.grid{display:grid;grid-template-columns:repeat(3,120px);gap:10px;margin:10px}
+.preview{width:42px;height:42px;border-radius:10px;margin:auto}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,120px)}}
+</style>
+</head>
+<body>
+<div id="game">
+<div id="ui">
+<div class="stat">⭐ <span id="score">0</span></div>
+<div class="stat">🪙 <span id="coins">0</span></div>
+<div class="stat">🔥 x<span id="combo">1</span></div>
+<div class="stat">❤️ <span id="lives">3</span></div>
+<div class="stat">🏆 <span id="best">0</span></div>
+<div class="stat">LVL <span id="level">1</span></div>
+</div>
+<div id="bossbar"><div id="bosshealth"></div></div><div id="bosstext"></div><div id="boss">👹</div><div id="player"></div>
+
+<div id="start" class="screen">
+<h1>DODGE RUSH</h1><div class="sub">⚡ Dodge • 🪙 Collect • 🔥 Combo • 👹 Defeat Bosses</div>
+<div class="sub">Bank: 🪙 <span id="bank">0</span></div>
+<div id="menuButtons">
+<button id="playBtn">🎮 PLAY</button><button id="shopBtn">🛒 SHOP</button>
+<button id="missionsBtn">🎯 MISSIONS</button><button id="achievementsBtn">🏆 ACHIEVEMENTS</button>
+</div></div>
+
+<div id="gameover" class="screen"><h2>💥 GAME OVER</h2><div class="sub">Score: <b id="finalScore">0</b></div><div class="sub">Run coins: <b id="finalCoins">0</b></div><div class="sub">Bank: 🪙 <b id="finalBank">0</b></div><button id="againBtn">🔄 PLAY AGAIN</button><button class="homeBtn">🏠 HOME</button></div>
+
+<div id="shop" class="screen"><h2>🛒 SHOP</h2><div class="sub">Bank: 🪙 <span id="shopBank">0</span></div><div class="grid" id="shopGrid"></div><button class="homeBtn">🏠 BACK</button></div>
+
+<div id="missions" class="screen"><h2>🎯 MISSIONS</h2><div id="missionList"></div><button class="homeBtn">🏠 BACK</button></div>
+
+<div id="achievements" class="screen"><h2>🏆 ACHIEVEMENTS</h2><div id="achievementList"></div><button class="homeBtn">🏠 BACK</button></div>
+
+<div id="pause" class="screen"><h2>⏸️ PAUSED</h2><button id="resumeBtn">▶️ RESUME</button><button class="homeBtn">🏠 HOME</button></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+let save;
+try{save=JSON.parse(localStorage.getItem("dodgeRushSaveV2")||"null")}catch(e){save=null}
+if(!save)save={coins:0,best:0,owned:["blue"],skin:"blue",missions:{coins:0,score:0,bosses:0},claimed:{coins:false,score:false,bosses:false},ach:{first:false,coins:false,score:false,boss:false}};
+function persist(){try{localStorage.setItem("dodgeRushSaveV2",JSON.stringify(save))}catch(e){}}
+const skins=[
+["blue","Ocean",0,"linear-gradient(135deg,#00f5ff,#1765ff)"],
+["purple","Galaxy",250,"linear-gradient(135deg,#c400ff,#6200ff)"],
+["green","Toxic",500,"linear-gradient(135deg,#00ff91,#00a84f)"],
+["red","Inferno",1000,"linear-gradient(135deg,#ff3030,#8d0000)"],
+["gold","Gold",2500,"linear-gradient(135deg,#fff06a,#ff9d00)"],
+["rainbow","Rainbow",5000,"linear-gradient(135deg,#ff0055,#ffb000,#00ff91,#00aaff,#b000ff)"]
+];
+let running=false,paused=false,score=0,runCoins=0,lives=3,combo=1,level=1,px=innerWidth/2,last=0,enemyClock=0,coinClock=0,powerClock=0,shootClock=0;
+let enemies=[],coins=[],powers=[],bullets=[],bossBullets=[],boss=null;
+for(let i=0;i<70;i++){const s=document.createElement("div");s.className="star";s.style.left=Math.random()*100+"%";s.style.top=Math.random()*100+"%";game.appendChild(s)}
+function hide(){document.querySelectorAll(".screen").forEach(x=>x.style.display="none")}
+function home(){running=false;paused=false;clearAll();hide();$("start").style.display="flex";refresh()}
+function clearAll(){[...enemies,...coins,...powers,...bullets,...bossBullets].forEach(x=>x.el.remove());enemies=[];coins=[];powers=[];bullets=[];bossBullets=[];boss=null;$("boss").style.display="none";$("bossbar").style.display="none";$("bosstext").style.display="none"}
+function refresh(){ $("bank").textContent=save.coins;$("shopBank").textContent=save.coins;$("best").textContent=save.best;$("score").textContent=Math.floor(score);$("coins").textContent=runCoins;$("combo").textContent=combo;$("lives").textContent=lives;$("level").textContent=level }
+function start(){
+hide();clearAll();score=0;runCoins=0;lives=3;combo=1;level=1;px=innerWidth/2;enemyClock=0;coinClock=0;powerClock=0;shootClock=0;running=true;paused=false;save.ach.first=true;persist();refresh();last=performance.now();requestAnimationFrame(loop)
+}
+function loop(t){if(!running||paused)return;let dt=Math.min(.05,(t-last)/1000);last=t;move(dt);spawn(dt);updateEnemies(dt);updateCoins(dt);updatePowers(dt);updateBullets(dt);updateBoss(dt);updateBossBullets(dt);score+=dt*15*combo;level=Math.floor(score/1000)+1;save.missions.score=Math.max(save.missions.score,Math.floor(score));if(runCoins>save.missions.coins)save.missions.coins=runCoins;if(boss===null&&level>=5&&level%5===0&&save.missions.bosses<Math.floor(level/5))startBoss();refresh();requestAnimationFrame(loop)}
+function move(dt){let dir=(keys.left?-1:0)+(keys.right?1:0);px=Math.max(25,Math.min(innerWidth-25,px+dir*500*dt));$("player").style.left=px+"px"}
+let keys={left:false,right:false};
+function spawn(dt){enemyClock+=dt*1000;coinClock+=dt*1000;powerClock+=dt*1000;shootClock+=dt*1000;if(enemyClock>Math.max(260,850-level*25)){enemyClock=0;spawnEnemy()}if(coinClock>800){coinClock=0;spawnCoin()}if(powerClock>6000){powerClock=0;spawnPower()}if(boss&&shootClock>300){shootClock=0;fire()}else if(!boss)shootClock=0}
+function spawnEnemy(){let e=document.createElement("div");e.className="enemy";let size=Math.random()<.15?65:Math.random()<.35?34:42;e.style.width=e.style.height=size+"px";let x=Math.random()*(innerWidth-size);e.style.left=x+"px";e.style.top="-70px";game.appendChild(e);enemies.push({el:e,x:x,y:-70,speed:(180+level*14)*(size===34?1.7:size===65?.7:1)})}
+function spawnCoin(){let e=document.createElement("div");e.className="coin";let x=Math.random()*(innerWidth-27);e.style.left=x+"px";e.style.top="-35px";game.appendChild(e);coins.push({el:e,x:x,y:-35,speed:180})}
+function spawnPower(){let e=document.createElement("div");e.className="power";let types=[["🛡️","shield"],["🐌","slow"],["❤️","life"],["🧲","magnet"]],q=types[Math.floor(Math.random()*types.length)];e.textContent=q[0];e.style.left=Math.random()*(innerWidth-40)+"px";e.style.top="-45px";game.appendChild(e);powers.push({el:e,y:-45,type:q[1],speed:150})}
+function overlap(a,b){let A=a.getBoundingClientRect(),B=b.getBoundingClientRect();return !(A.right<B.left||A.left>B.right||A.bottom<B.top||A.top>B.bottom)}
+function updateEnemies(dt){for(let i=enemies.length-1;i>=0;i--){let e=enemies[i];e.y+=e.speed*dt;e.el.style.top=e.y+"px";if(overlap($("player"),e.el)){if(shield){shield=false;pop("🛡️ BLOCKED!",px,e.y)}else{lives--;combo=1;if(lives<=0)return gameOver()}e.el.remove();enemies.splice(i,1)}else if(e.y>innerHeight+80){e.el.remove();enemies.splice(i,1);combo=1}}}
+function updateCoins(dt){for(let i=coins.length-1;i>=0;i--){let c=coins[i];c.y+=c.speed*dt;c.el.style.top=c.y+"px";if(overlap($("player"),c.el)){runCoins+=10;save.coins+=10;combo=Math.min(10,combo+1);save.ach.coins=save.coins>=100;persist();pop("🪙 +10",c.x,c.y);c.el.remove();coins.splice(i,1)}else if(c.y>innerHeight+40){c.el.remove();coins.splice(i,1)}}}
+let shield=false,slow=false,magnet=false;
+function updatePowers(dt){for(let i=powers.length-1;i>=0;i--){let p=powers[i];p.y+=p.speed*dt;p.el.style.top=p.y+"px";if(overlap($("player"),p.el)){if(p.type==="shield"){shield=true;pop("🛡️ SHIELD!",px,p.y)}if(p.type==="slow"){slow=true;setTimeout(()=>slow=false,5000);pop("🐌 SLOW!",px,p.y)}if(p.type==="life"){lives=Math.min(5,lives+1);pop("❤️ +1 LIFE!",px,p.y)}if(p.type==="magnet"){magnet=true;setTimeout(()=>magnet=false,6000);pop("🧲 MAGNET!",px,p.y)}p.el.remove();powers.splice(i,1)}else if(p.y>innerHeight+50){p.el.remove();powers.splice(i,1)}}}
+function fire(){let e=document.createElement("div");e.className="bullet";let r=$("player").getBoundingClientRect();e.style.left=(px-4)+"px";e.style.top=(r.top-20)+"px";game.appendChild(e);bullets.push({el:e,x:px,y:r.top,speed:650})}
+function updateBullets(dt){for(let i=bullets.length-1;i>=0;i--){let b=bullets[i];b.y-=b.speed*dt;b.el.style.top=b.y+"px";if(boss&&b.y<boss.y+100&&Math.abs(b.x-boss.x)<65){boss.hp-=5;b.el.remove();bullets.splice(i,1);pop("💥",b.x,b.y);continue}if(b.y<-30){b.el.remove();bullets.splice(i,1)}}}
+function startBoss(){boss={hp:100,x:innerWidth/2,y:145,dir:1,clock:0};$("boss").style.display="block";$("bossbar").style.display="block";$("bosstext").style.display="block";$("bosstext").textContent="👹 BOSS ROUND! AUTO-FIRE!";pop("👹 BOSS!",innerWidth/2,150)}
+function updateBoss(dt){if(!boss)return;boss.x+=boss.dir*180*dt;if(boss.x>innerWidth-80)boss.dir=-1;if(boss.x<80)boss.dir=1;$("boss").style.left=(boss.x-60)+"px";$("boss").style.top=boss.y+"px";$("bosshealth").style.width=Math.max(0,boss.hp)+"%";boss.clock+=dt;if(boss.clock>1.2){boss.clock=0;let e=document.createElement("div");e.className="bossbullet";e.style.left=(boss.x-8)+"px";e.style.top=(boss.y+90)+"px";game.appendChild(e);bossBullets.push({el:e,x:boss.x,y:boss.y+90,speed:280})}if(boss.hp<=0){save.missions.bosses++;save.ach.boss=true;save.coins+=250;runCoins+=250;persist();pop("👑 BOSS DEFEATED! +250 COINS",boss.x,boss.y);$("boss").style.display="none";$("bossbar").style.display="none";$("bosstext").style.display="none";boss=null}}
+function updateBossBullets(dt){for(let i=bossBullets.length-1;i>=0;i--){let b=bossBullets[i];b.y+=(slow?.45:1)*b.speed*dt;b.el.style.top=b.y+"px";if(overlap($("player"),b.el)){if(shield){shield=false;pop("🛡️ BLOCKED!",px,b.y)}else{lives--;combo=1;if(lives<=0)return gameOver()}b.el.remove();bossBullets.splice(i,1)}else if(b.y>innerHeight+30){b.el.remove();bossBullets.splice(i,1)}}}
+function gameOver(){running=false;if(Math.floor(score)>save.best)save.best=Math.floor(score);save.ach.score=save.best>=10000;persist();$("finalScore").textContent=Math.floor(score);$("finalCoins").textContent=runCoins;$("finalBank").textContent=save.coins;hide();$("gameover").style.display="flex";refresh()}
+function pop(text,x,y){let p=document.createElement("div");p.className="popup";p.textContent=text;p.style.left=x+"px";p.style.top=y+"px";game.appendChild(p);setTimeout(()=>p.remove(),800)}
+function openShop(){hide();$("shop").style.display="flex";renderShop()}
+function renderShop(){let g=$("shopGrid");g.innerHTML="";$("shopBank").textContent=save.coins;skins.forEach(s=>{let d=document.createElement("div");d.className="card";let v=document.createElement("div");v.className="preview";v.style.background=s[3];d.append(v);let t=document.createElement("div");t.textContent=s[1];d.append(t);let b=document.createElement("button");if(save.skin===s[0]){b.textContent="EQUIPPED";b.disabled=true}else if(save.owned.includes(s[0])){b.textContent="EQUIP";b.onclick=()=>{save.skin=s[0];persist();renderShop()}}else{b.textContent="🪙 "+s[2];b.onclick=()=>{if(save.coins>=s[2]){save.coins-=s[2];save.owned.push(s[0]);save.skin=s[0];persist();renderShop()}else alert("Not enough coins yet!")}}d.append(b);g.append(d)})}
+function openMissions(){hide();$("missions").style.display="flex";renderMissions()}
+function renderMissions(){let list=$("missionList");list.innerHTML="";let data=[["coins","🪙 Collect 100 coins",100,500],["score","⭐ Reach 10,000 score",10000,1000],["bosses","👹 Defeat a boss",1,750]];data.forEach(m=>{let val=save.missions[m[0]],done=val>=m[2],claimed=save.claimed[m[0]],d=document.createElement("div");d.className="card";d.innerHTML="<b>"+m[1]+"</b><br>Progress: "+Math.min(val,m[2])+"/"+m[2]+"<br>Reward: 🪙 "+m[3];let b=document.createElement("button");if(done&&!claimed){b.textContent="🎁 CLAIM REWARD";b.onclick=()=>{save.coins+=m[3];save.claimed[m[0]]=true;persist();renderMissions();refresh()};d.append(b)}else if(claimed){d.innerHTML+="<br>✅ CLAIMED"}else d.innerHTML+="<br>🔒 Keep playing!";list.append(d)})}
+function openAchievements(){hide();$("achievements").style.display="flex";renderAchievements()}
+function renderAchievements(){let list=$("achievementList");list.innerHTML="";let data=[["first","🎮 First Run","Play a game",100],["coins","🪙 Coin Hunter","Get 100 bank coins",500],["score","⭐ High Roller","Reach 10,000 score",1000],["boss","👑 Boss Slayer","Defeat a boss",750]];data.forEach(a=>{let done=save.ach[a[0]],claimed=save.claimed["a_"+a[0]],d=document.createElement("div");d.className="card";d.innerHTML="<b>"+(done?"🏆":"🔒")+" "+a[1]+"</b><br>"+a[2]+"<br>Reward: 🪙 "+a[3];let b=document.createElement("button");if(done&&!claimed){b.textContent="🎁 CLAIM";b.onclick=()=>{save.coins+=a[3];save.claimed["a_"+a[0]]=true;persist();renderAchievements();refresh()};d.append(b)}else if(claimed)d.innerHTML+="<br>✅ CLAIMED";else d.innerHTML+="<br>🔒 LOCKED";list.append(d)})}
+$("playBtn").onclick=start;$("againBtn").onclick=start;$("shopBtn").onclick=openShop;$("missionsBtn").onclick=openMissions;$("achievementsBtn").onclick=openAchievements;$("resumeBtn").onclick=()=>{paused=false;hide();last=performance.now();requestAnimationFrame(loop)};document.querySelectorAll(".homeBtn").forEach(b=>b.onclick=home);
+document.addEventListener("keydown",e=>{if(e.key==="ArrowLeft"||e.key.toLowerCase()==="a")keys.left=true;if(e.key==="ArrowRight"||e.key.toLowerCase()==="d")keys.right=true;if(e.key==="Escape"&&running){paused=!paused;if(paused){$("pause").style.display="flex"}else{$("pause").style.display="none";last=performance.now();requestAnimationFrame(loop)}}});
+document.addEventListener("keyup",e=>{if(e.key==="ArrowLeft"||e.key.toLowerCase()==="a")keys.left=false;if(e.key==="ArrowRight"||e.key.toLowerCase()==="d")keys.right=false});
+document.addEventListener("mousemove",e=>{if(running&&!paused){px=e.clientX}});
+window.addEventListener("resize",()=>{px=Math.min(px,innerWidth-25)});
+refresh();
+})();
+</script>
+</body>
+</html>
